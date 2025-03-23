@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Profile</title>
+    <link rel="stylesheet" href="/css/ueditprofile.css">
+</head>
+<body>
+    <main>
+        <section>
+            <div class="sidebar">
+                <figure class="center-figure">
+                    <div class="logos">
+                        <img src="logos/ccslogo.png" alt="Logo" style="width:100%; max-width: 100px;">
+                    </div>
+                </figure>
+                <a id="homeLink" href="/user/home">Home</a>
+                <a id="accountLink" href="/user/editprofile">Account</a>
+                <a id="historyLink" href="/user/history">History</a>
+    
+                <!-- Updated Logout Section -->
+                <div class="sidebottom">
+                    <div class="logout-section" onclick="logout()">
+                        <span class="logout-icon">&#128075;</span> <!-- Waving hand emoji as an icon -->
+                        <span class="logout-label">Logout</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <div class="article">
+            <div class="articleContent">
+                <h3>Edit Profile</h3>
+                
+                <div class="editprofileform">
+                    <div class="input-group">
+                        <div style="display: none;">
+                            <label for="idno">ID Number</label>
+                            <input type="number" id="idno" required>
+                        </div>
+                        <div>
+                            <label for="firstname">First Name</label>
+                            <input type="text" id="firstname" required>
+                            <label for="lastname">Last Name</label>
+                            <input type="text" id="lastname" required>
+                            
+                            <label for="level">Year Level</label>
+                            <select id="level">
+                                <option value="1st">1st Year</option>
+                                <option value="2nd">2nd Year</option>
+                                <option value="3rd">3rd Year</option>
+                                <option value="4th">4th Year</option>
+                                <option value="5th">5th Year</option>
+                            </select>
+                            
+                            <label for="username">Username</label>
+                            <input type="text" id="username" required>
+                            <label for="email">Email</label>
+                            <input type="email" id="email" required>
+                        </div>
+                        <div>
+                            <label for="middlename">Middle Name</label>
+                            <input type="text" id="middlename">
+                            <label for="course">Course</label>  
+                            <select id="course">
+                                <option value="BSIT">BSIT</option>
+                                <option value="BSED">BSED</option>
+                                <option value="BSBA">BSBA</option>
+                                <option value="BSACCT">BSACCT</option>
+                                <option value="BSCE">BSCE</option>
+                            </select>
+                            <label for="address">Address</label>
+                            <input type="text" id="address" required>
+                            <label for="password">Password</label>
+                            <input type="password" id="password" required>
+                        </div>  
+                        <div class="profile-picture">
+                            <img id="profilePicDisplay" src="" alt="Profile Picture">
+                            <div class="edit-overlay">Edit Profile</div>
+                        </div>
+                    </div>
+                    <input type="submit" id="updatebutton" value="Update">
+                </div>
+            </div>
+        </div>
+    </main>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+                const username = localStorage.getItem('username');
+                if (username) {
+                    fetch('/api/student', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ username })
+                    })
+                    .then(response => response.json())
+                    .then(student => {
+                        if (student) {
+                            document.getElementById('idno').value = student.idno;
+                            document.getElementById('profilePicDisplay').src = `/pfp/${student.idno}.png`;
+                            document.getElementById('lastname').value = student.lastname;
+                            document.getElementById('firstname').value = student.firstname;
+                            document.getElementById('middlename').value = student.middlename;
+                            document.getElementById('course').value = student.course;
+                            document.getElementById('level').value = student.level;
+                            document.getElementById('email').value = student.email;
+                            document.getElementById('address').value = student.address;
+                            document.getElementById('username').value = student.username;
+                        } else {
+                            console.error('No student data returned');
+                        }
+                    })
+                    .catch(error => console.error('Error fetching student data:', error));
+                } else {
+                    console.error('Username not found in localStorage');
+                    alert('Failed to fetch student data. Please try again.');
+                }
+            });
+    
+            document.getElementById('updatebutton').addEventListener('click', function (event) {
+                event.preventDefault();
+    
+                const updatedData = {
+                    idno: document.getElementById('idno').value,
+                    lastname: document.getElementById('lastname').value,
+                    firstname: document.getElementById('firstname').value,
+                    middlename: document.getElementById('middlename').value,
+                    course: document.getElementById('course').value,
+                    level: document.getElementById('level').value,
+                    email: document.getElementById('email').value,
+                    address: document.getElementById('address').value,
+                    username: document.getElementById('username').value,
+                    password: document.getElementById('password').value
+                };
+    
+                fetch('/api/updateProfile', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updatedData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Profile updated successfully!');
+                        window.location.href = '/user/home';
+                    } else {
+                        alert(`Update failed: ${data.message}`);
+                    }
+                })
+                .catch(error => console.error('Error updating profile:', error));
+            });
+    
+            function highlightActiveLink() {
+                const currentPath = window.location.pathname;
+                const links = document.querySelectorAll('.sidebar a');
+                links.forEach(link => {
+                    if (link.getAttribute('href') === currentPath) {
+                        link.classList.add('active');
+                    } else {
+                        link.classList.remove('active');
+                    }
+                });
+            }
+            window.onload = highlightActiveLink;
+            
+            function toggleDropdown(event) {
+                event.preventDefault(); 
+                var dropdown = event.target.nextElementSibling; 
+                if (dropdown.style.display === "block") {
+                    dropdown.style.display = "none";
+                } else {
+                    dropdown.style.display = "block";
+                }
+            }
+            function setPlaceholder(id, text) {
+                var element = document.getElementById(id);
+                if (element) {
+                    if (element.tagName === 'INPUT') {
+                        element.placeholder = text;
+                    } else if (element.tagName === 'SELECT') {
+                        var placeholderOption = document.createElement('option');
+                        placeholderOption.value = "";
+                        placeholderOption.textContent = text;
+                        placeholderOption.disabled = true;
+                        placeholderOption.selected = true;
+                        element.insertBefore(placeholderOption, element.firstChild);
+                    } else {
+                        console.error('Unsupported element type');
+                    }
+                } else {
+                    console.error('No element found with id: ' + id);
+                }
+            }
+    
+         
+        // Handle profile picture update
+        const profilePictureContainer = document.querySelector('.profile-picture');
+        profilePictureContainer.addEventListener('click', () => {
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = 'image/*';
+            fileInput.onchange = (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    const formData = new FormData();
+                    formData.append('username', username);
+                    formData.append('profilePic', file);
+    
+                    fetch('/api/updateProfilePicture', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Update profile picture on the page
+                            const reader = new FileReader();
+                            reader.onload = (e) => {
+                                document.getElementById('profilePicDisplay').src = e.target.result;
+                            };
+                            reader.readAsDataURL(file);
+                            alert('Profile picture updated successfully!');
+                        } else {
+                            alert(`Update failed: ${data.message}`);
+                        }
+                    })
+                    .catch(error => console.error('Error updating profile picture:', error));
+                }
+            };
+            fileInput.click();
+        });
+
+    function logout() {
+                const username = localStorage.getItem('username');
+                if (username) {
+                    fetch('/logout', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ username })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.message === 'Logged out successfully') {
+                            localStorage.removeItem('email');
+                            window.location.href = '/';
+                        } else {
+                            alert('Logout failed');
+                        }
+                    })
+                    .catch(error => console.error('Error during logout:', error));
+                } else {
+                    console.error('Username not found in localStorage');
+                }
+            }
+           
+            
+    </script>
+</body>
+</html>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+    <link rel="stylesheet" href="css/register.css">
+</head>
+<body>
+    <main>
+        <div class="logo-container">
+            <img src="logos/ccslogo.png" alt="CCS Logo">
+        </div>
+        <div class="register-container">
+            <h1>Sign Up</h1>
+            <form class="register-form" id="registerForm">
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="idno">ID Number</label>
+                        <input type="number" id="idno" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="lastname">Last Name</label>
+                        <input type="text" id="lastname" required>
+                    </div>
+                </div>
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="firstname">First Name</label>
+                        <input type="text" id="firstname" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="middlename">Middle Name</label>
+                        <input type="text" id="middlename">
+                    </div>
+                </div>
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="course">Course</label>
+                        <select id="course">
+                            <option value="bsit">BSIT</option>
+                            <option value="bsed">BSED</option>
+                            <option value="bsba">BSBA</option>
+                            <option value="bsacct">BSACCT</option>
+                            <option value="bsce">BSCE</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="level">Year Level</label>
+                        <select id="level">
+                            <option value="1st">1st Year</option>
+                            <option value="2nd">2nd Year</option>
+                            <option value="3rd">3rd Year</option>
+                            <option value="4th">4th Year</option>
+                            <option value="5th">5th Year</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="address">Address</label>
+                        <input type="text" id="address" required>
+                    </div>
+                </div>
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" required>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="profilePic">Profile Picture</label>
+                    <input type="file" id="profilePic" accept="image/*" required>
+                </div>
+                <button type="submit" class="register-button">Register</button>
+                <div class="login-prompt">
+                    Already have an account? <a href="/" class="login-link">Log in</a>
+                </div>
+            </form>
+        </div>
+    </main>
+    <script>
+        async function register(event) {
+            event.preventDefault();
+
+            const idno = document.getElementById('idno').value;
+            const lastname = document.getElementById('lastname').value;
+            const firstname = document.getElementById('firstname').value;
+            const middlename = document.getElementById('middlename').value;
+            const course = document.getElementById('course').value;
+            const level = document.getElementById('level').value;
+            const email = document.getElementById('email').value;
+            const address = document.getElementById('address').value;
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const profilePic = document.getElementById('profilePic').files[0];
+
+            const formData = new FormData();
+            formData.append('idno', idno);
+            formData.append('lastname', lastname);
+            formData.append('firstname', firstname);
+            formData.append('middlename', middlename);
+            formData.append('course', course);
+            formData.append('level', level);
+            formData.append('email', email);
+            formData.append('address', address);
+            formData.append('username', username);
+            formData.append('password', password);
+            formData.append('profilePic', profilePic);
+
+            try {
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    body: formData,
+                });
+                if (response.ok) {
+                    alert("Registered Successfully.");
+                    window.location.href = '/';
+                } else {
+                    const errorData = await response.json();
+                    console.error('Failed to register:', errorData.error);
+                    alert(errorData.error);
+                }
+            } catch (err) {
+                console.error('Error during registration:', err);
+                alert("An error occurred while processing your request.");
+            }
+        }
+
+        document.getElementById('registerForm').addEventListener('submit', register);
+    </script>
+</body>
+</html>

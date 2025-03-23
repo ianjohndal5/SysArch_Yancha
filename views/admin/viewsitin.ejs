@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HOME</title>
+    <link rel="stylesheet" href="/css/aviewsitin.css">
+</head>
+<div class="container">
+    <section>
+        <button class="burger-menu" onclick="toggleSidebar()">☰</button>
+        <div class="sidebar">
+            <figure class="center-figure">
+                <div class="logos">
+                    <img src="logos/ccslogo.png" alt="Logo" style="width:100%; max-width: 100px;">
+                </div>
+            </figure>
+            <a href="/admin/home" class="active">Dashboard</a>
+            <a href="/admin/editprofile">Account</a>
+            <a href="/admin/students">Students</a>
+            <a href="/admin/viewsitin">Sit-in</a>
+            <a href="/admin/viewrecords">Records</a>
+            <a href="/admin/viewreports">Reports</a>
+            <a href="/admin/viewfeedbacks">Feedbacks</a>
+            <a href="/admin/viewstatistics">Announcement</a>
+            <div class="sidebottom">
+                <div class="logout-section" onclick="logout()">
+                    <span class="logout-icon">&#128075;</span>
+                    <span class="logout-label">Logout</span>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    
+    <main class="main-content">
+        <div id="sitins-list">
+            <h3>View Sit-in Records</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Sit ID</th>
+                        <th>ID No</th>
+                        <th>Name</th>
+                        <th>Purpose</th>
+                        <th>Lab</th>
+                        <th>Session</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="sitins-table-body">
+                    <!-- Sit-in records will be dynamically populated here -->
+                </tbody>
+            </table>
+        </div>
+    </main>
+    <script>
+        let sidebarVisible = false;
+
+function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    sidebarVisible = !sidebarVisible; // Toggle visibility state
+    if (sidebarVisible) {
+        sidebar.classList.add('show'); // Show sidebar
+    } else {
+        sidebar.classList.remove('show'); // Hide sidebar
+    }
+}
+
+window.onclick = function (event) {
+    const sidebar = document.querySelector('.sidebar');
+    const burgerMenu = document.querySelector('.burger-menu');
+    if (sidebarVisible && !sidebar.contains(event.target) && event.target !== burgerMenu) {
+        sidebar.classList.remove('show'); // Hide sidebar when clicking outside
+        sidebarVisible = false;
+    }
+};
+
+    document.addEventListener('DOMContentLoaded', () => {
+        fetch('/api/student_sessions')
+            .then(response => response.json())
+            .then(sitins => {
+                const tableBody = document.getElementById('sitins-table-body');
+                sitins.forEach(sitin => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${sitin.sit_id}</td>
+                        <td>${sitin.idno}</td>
+                        <td>${sitin.name}</td>
+                        <td>${sitin.purpose}</td>
+                        <td>${sitin.labroom}</td>
+                        <td>${sitin.session}</td>
+                        <td>${sitin.status}</td>
+                        <td>
+                            <button style="background-color: red; border:none; width: 80px; height: 30px; font-weight: bold; color: white; border-radius: 5px" onclick="deletesession('${sitin.idno}')">Time Out</button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            })
+            .catch(error => console.error('Error fetching sit-in records:', error));
+    });
+
+
+    
+    function deletesession(idno) {
+            fetch(`/api/delete/${idno}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ idno })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message === 'Session deleted successfully') {
+                    alert('Logout successful');
+                    // Reload the entire page
+                    window.location.reload();
+                } else {
+                    alert('Logout Student');
+                    window.location.reload();
+                }
+            })
+            .catch(error => console.error('Error during logout:', error));
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+                const username = localStorage.getItem('username');  
+                if (username) {
+                    fetch('/api/student', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ username })
+                    })
+                    .then(response => response.json())
+                    .then(student => {
+                        if (student) {
+                            document.getElementById('student-name2').textContent = `${student.firstname} ${student.lastname}`;
+                            document.getElementById('email').textContent = student.email;
+                            document.getElementById('profilePicDisplay').src = `/pfp/${student.idno}.png`;
+                        } else {
+                            console.error('No student data returned');
+                        }
+                    })
+                    .catch(error => console.error('Error fetching student data:', error));
+                } else {
+                    console.error('Username not found in localStorage');
+                    alert('Failed to fetch student data. Please try again.');
+                }
+            });
+            document.addEventListener('DOMContentLoaded', () => {
+            const username = localStorage.getItem('username');  
+            if (username) {
+                fetch('/api/student', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username })
+                })
+                .then(response => response.json())
+                .then(student => {
+                    console.log('Fetched student data:', student);
+                    if (student) {
+                        console.log('Updating the DOM with student data');
+                        document.getElementById('student-name2').textContent = `${student.firstname} ${student.lastname}`;
+                        document.getElementById('student-name').textContent = `${student.firstname} ${student.lastname}`;
+                        document.getElementById('student-course').textContent = student.course;
+                        document.getElementById('student-year').textContent = student.level;
+                        document.getElementById('student-email').textContent = student.email;
+                        document.getElementById('student-address').textContent = student.address || 'N/A';
+                        document.getElementById('student-session').textContent = student.session_value;
+                        document.getElementById('student-picture-img').src = `public/pfp/${student.username}.jpg`; // Update picture src
+                    } else {
+                        console.error('No student data returned');
+                    }
+                })
+                .catch(error => console.error('Error fetching student data:', error));
+            } else {
+                console.error('Username not found in localStorage');
+                alert('Failed to fetch student data. Please try again.');
+            }
+        });
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            const tableBody = document.getElementById('student-sessions-table-body');
+            const exportCsvButton = document.getElementById('export-csv');
+            const exportExcelButton = document.getElementById('export-excel');
+            const exportPdfButton = document.getElementById('export-pdf');
+    
+            if (tableBody && exportCsvButton && exportExcelButton && exportPdfButton) {
+                fetch('/api/report')
+                    .then(response => response.json())
+                    .then(sessions => {
+                        sessions.forEach(session => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${session.idno}</td>
+                                <td>${session.lab}</td>
+                                <td>${session.date_created}</td>
+                                <td>${session.message}</td>
+                            `;
+                            tableBody.appendChild(row);
+                        });
+                    })
+                    .catch(error => console.error('Error fetching student sessions:', error));
+    
+                exportCsvButton.addEventListener('click', () => {
+                    exportTableToCSV('student_sessions.csv');
+                });
+    
+                exportExcelButton.addEventListener('click', () => {
+                    exportTableToExcel('student_sessions.xlsx');
+                });
+    
+                exportPdfButton.addEventListener('click', () => {
+                    exportTableToPDF('student_sessions.pdf');
+                });
+            } else {
+                console.error('Error: One or more elements not found in the DOM.');
+            }
+        });
+    
+        function exportTableToCSV(filename) {
+            const csv = [];
+            const rows = document.querySelectorAll('table tr');
+            rows.forEach(row => {
+                const cols = row.querySelectorAll('td, th');
+                const csvRow = [];
+                cols.forEach(col => csvRow.push(col.innerText));
+                csv.push(csvRow.join(','));
+            });
+            const csvBlob = new Blob([csv.join('\n')], { type: 'text/csv' });
+            const csvUrl = URL.createObjectURL(csvBlob);
+            const link = document.createElement('a');
+            link.href = csvUrl;
+            link.download = filename;
+            link.click();
+        }
+    
+        function exportTableToExcel(filename) {
+            const workbook = XLSX.utils.table_to_book(document.getElementById('student-sessions-table'));
+            XLSX.writeFile(workbook, filename);
+        }
+    
+        function exportTableToPDF(filename) {
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF();
+            pdf.autoTable({ html: '#student-sessions-table' });
+            pdf.save(filename);
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+                const username = localStorage.getItem('username');  
+                if (username) {
+                    fetch('/api/student', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ username })
+                    })
+                    .then(response => response.json())
+                    .then(student => {
+                        if (student) {
+                            document.getElementById('student-name2').textContent = `${student.firstname} ${student.lastname}`;
+                            document.getElementById('email').textContent = student.email;
+                            document.getElementById('profilePicDisplay').src = `/pfp/${student.idno}.png`;
+                        } else {
+                            console.error('No student data returned');
+                        }
+                    })
+                    .catch(error => console.error('Error fetching student data:', error));
+                } else {
+                    console.error('Username not found in localStorage');
+                    alert('Failed to fetch student data. Please try again.');
+                }
+            });
+
+
+            
+        function logout() {
+            const username = localStorage.getItem('username');
+            if (username) {
+                fetch('/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message === 'Logged out successfully') {
+                        localStorage.removeItem('email');
+                        window.location.href = '/';
+                    } else {
+                        alert('Logout failed');
+                    }
+                })
+                .catch(error => console.error('Error during logout:', error));
+            } else {
+                console.error('Username not found in localStorage');
+            }
+        }
+        function highlightActiveLink() {
+            const currentPath = window.location.pathname;
+            const links = document.querySelectorAll('.sidebar a');
+            links.forEach(link => {
+                if (link.getAttribute('href') === currentPath) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+        }
+        window.onload = highlightActiveLink;
+
+        function toggleDropdown(event) {
+            event.preventDefault(); // Prevent the default link behavior
+            var dropdown = event.target.nextElementSibling; // Get the next sibling element (the dropdown)
+            if (dropdown.style.display === "block") {
+                dropdown.style.display = "none";
+            } else {
+                dropdown.style.display = "block";
+            }
+        }
+
+
+    
+        function logout() {
+            const username = localStorage.getItem('username');
+            if (username) {
+                fetch('/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message === 'Logged out successfully') {
+                        localStorage.removeItem('email');
+                        window.location.href = '/';
+                    } else {
+                        alert('Logout failed');
+                    }
+                })
+                .catch(error => console.error('Error during logout:', error));
+            } else {
+                console.error('Username not found in localStorage');
+            }
+        }
+        function highlightActiveLink() {
+            const currentPath = window.location.pathname;
+            const links = document.querySelectorAll('.sidebar a');
+            links.forEach(link => {
+                if (link.getAttribute('href') === currentPath) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+        }
+        window.onload = highlightActiveLink;
+
+        function toggleDropdown(event) {
+            event.preventDefault(); // Prevent the default link behavior
+            var dropdown = event.target.nextElementSibling; // Get the next sibling element (the dropdown)
+            if (dropdown.style.display === "block") {
+                dropdown.style.display = "none";
+            } else {
+                dropdown.style.display = "block";
+            }
+        }
+        
+    </script>
+</div>
+</html>

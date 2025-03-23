@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HOME</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/css/ahome.css">
+</head>
+<body>
+    <div class="container">
+        <section>
+            <button class="burger-menu" onclick="toggleSidebar()">☰</button>
+            <div class="sidebar">
+                <figure class="center-figure">
+                    <div class="logos">
+                        <img src="logos/ccslogo.png" alt="Logo" style="width:100%; max-width: 100px;">
+                    </div>
+                </figure>
+                <a href="/admin/home" class="active">Dashboard</a>
+                <a href="/admin/editprofile">Account</a>
+                <a href="/admin/students">Students</a>
+                <a href="/admin/viewsitin">View Sit-in</a>
+                <a href="/admin/viewrecords">View Records</a>
+                <a href="/admin/viewreports">View Reports</a>
+                <a href="/admin/viewfeedbacks">View Feedbacks</a>
+                <a href="/admin/viewstatistics">Announcement</a>
+                <div class="sidebottom">
+                    <div class="logout-section" onclick="logout()">
+                        <span class="logout-icon">&#128075;</span>
+                        <span class="logout-label">Logout</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Navbar -->
+            <div class="navbar">
+                <div class="search-bar">
+                    <input type="search" placeholder="Search Here" class="search-input" id="search-input">
+                    <button id="search-button">Search</button>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="statistics">
+                <div class="stat-card">
+                    <h4>Total Sit-In</h4>
+                    <span id="totalSitInCount">0</span>
+                </div>
+                <div class="stat-card">
+                    <h4>Current Sit-In</h4>
+                    <span id="currentSitInCount">0</span>
+                </div>
+                <div class="stat-card">
+                    <h4>Total Registered</h4>
+                    <span id="totalRegisteredStudentsCount">0</span>
+                </div>
+            </div>
+
+            <!-- Announcements -->
+            <div class="announcements">
+                <h3>Announcements</h3>
+                <div id="announcements">
+                    <!-- Announcements will be dynamically added here -->
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="charts">
+                <div class="chart-card">
+                    <h3>Reports Over Time</h3>
+                    <canvas id="myChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>Purpose</h3>
+                    <canvas id="purposeChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>Lab</h3>
+                    <canvas id="roomChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Students List -->
+            <div class="students">
+                <h3>Students</h3>
+                <ul id="studentList"></ul>
+                <button id="showMoreButton" class="show-more-button">Show More</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="searchModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Student Information</h3>
+            <div id="student-info">
+                <p>Name: <span id="modal-student-name"></span></p>
+                <p>Total Remaining Sessions: <span id="modal-student-session"></span></p>
+                <label for="purpose">Purpose of Sit-in:</label>
+                <input type="text" id="purpose" placeholder="Enter purpose">
+                <label for="labroom">Lab Room:</label>
+                <input type="text" id="labroom" placeholder="Enter lab room">
+                <button id="settle-button">Settle Student</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="notFoundModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeNotFoundModal()">&times;</span>
+            <h3>Student Not Found</h3>
+            <p>The student ID you entered does not exist.</p>
+            <button onclick="closeNotFoundModal()">OK</button>
+        </div>
+    </div>
+    <script>
+       let sidebarVisible = false;
+
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebarVisible = !sidebarVisible; // Toggle visibility state
+            if (sidebarVisible) {
+                sidebar.classList.add('show'); // Show sidebar
+            } else {
+                sidebar.classList.remove('show'); // Hide sidebar
+            }
+        }
+
+        window.onclick = function (event) {
+            const sidebar = document.querySelector('.sidebar');
+            const burgerMenu = document.querySelector('.burger-menu');
+            if (sidebarVisible && !sidebar.contains(event.target) && event.target !== burgerMenu) {
+                sidebar.classList.remove('show'); // Hide sidebar when clicking outside
+                sidebarVisible = false;
+            }
+        };
+
+        fetch('/api/students')
+    .then(response => response.json())
+    .then(students => {
+        const studentList = document.getElementById('studentList');
+        const showMoreButton = document.getElementById('showMoreButton');
+
+        // Limit the display to 3-5 students
+        const displayLimit = 3; // You can change this to 5 if needed
+        const limitedStudents = students.slice(0, displayLimit);
+
+        // Display the limited list of students
+        limitedStudents.forEach(student => {
+            const listItem = document.createElement('li');
+            listItem.textContent = `${student.lastname}, ${student.firstname} - ${student.course} (${student.level})`;
+            studentList.appendChild(listItem);
+        });
+
+        // If there are more students than the limit, show the "Show More" button
+        if (students.length > displayLimit) {
+            showMoreButton.style.display = 'block';
+            showMoreButton.addEventListener('click', () => {
+                // Redirect to the full students page
+                window.location.href = '/admin/students';
+            });
+        } else {
+            showMoreButton.style.display = 'none'; // Hide the button if there are no more students to show
+        }
+    })
+    .catch(error => console.error('Error fetching students:', error));
+        fetch('/api/student_session')
+            .then(response => response.json())
+            .then(data => {
+                const purposeData = {};
+                const roomData = {};
+
+                data.forEach(row => {
+                    if (!purposeData[row.purpose]) purposeData[row.purpose] = 0;
+                    purposeData[row.purpose] += row.count;
+
+                    if (!roomData[row.labroom]) roomData[row.labroom] = 0;
+                    roomData[row.labroom] += row.count;
+                });
+
+                const purposeChart = new Chart(document.getElementById('purposeChart'), {
+                    type: 'pie',
+                    data: {
+                        labels: Object.keys(purposeData),
+                        datasets: [{
+                            data: Object.values(purposeData),
+                            backgroundColor: ['#FF6384',
+                            '#36A2EB',
+                            '#FFCE56',
+                            '#4BC0C0',
+                            '#9966FF',
+                            '#FF9F40',
+                            '#8E44AD',
+                            '#D35400',
+                            '#1ABC9C',
+                            '#2ECC71',
+                            '#3498DB',
+                            '#E74C3C',
+                            '#ECF0F1',
+                            '#95A5A6',
+                            '#7F8C8D',
+                            '#16A085']
+                        }]
+                    }
+                });
+
+                const roomChart = new Chart(document.getElementById('roomChart'), {
+                    type: 'pie',
+                    data: {
+                        labels: Object.keys(roomData),
+                        datasets: [{
+                            data: Object.values(roomData),
+                            backgroundColor: ['#FF6384',
+                            '#36A2EB',
+                            '#FFCE56',
+                            '#4BC0C0',
+                            '#9966FF',
+                            '#FF9F40',
+                            '#8E44AD',
+                            '#D35400',
+                            '#1ABC9C',
+                            '#2ECC71',
+                            '#3498DB',
+                            '#E74C3C',
+                            '#ECF0F1',
+                            '#95A5A6',
+                            '#7F8C8D',
+                            '#16A085']
+                        }]
+                    }
+                });
+            })
+            .catch(error => console.error('Error fetching data:', error));
+        function fetchStudentData() {
+  fetch('/api/student_sessions')
+    .then(response => response.json())
+    .then(rows => {
+      // Process the data to get count of students per day
+      const studentData = rows.reduce((acc, row) => {
+        const day = row.day;
+        if (!acc[day]) acc[day] = 0;
+        acc[day]++;
+        return acc;
+      }, {});
+
+      const xValues = Object.keys(studentData);
+      const yValues = Object.values(studentData);
+
+      new Chart("myChart", {
+        type: "line",
+        data: {
+          labels: xValues,
+          datasets: [{
+            fill: false,
+            pointRadius: 4,
+            borderColor: "rgba(0,0,255,0.5)",
+            data: yValues
+          }]
+        },    
+        options: {
+          legend: { display: false },
+          title: {
+            display: true,
+            text: "Student Count Per Day",
+            fontSize: 16
+          }
+        }
+      });
+    })
+    .catch(error => console.error('Error fetching student data:', error));
+}
+
+// Fetch data and create the chart on page load
+fetchStudentData();
+         document.addEventListener('DOMContentLoaded', () => {
+    // Fetch student data for the profile
+    const username = localStorage.getItem('username');  
+    if (username) {
+        fetch('/api/student', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username })
+        })
+        .then(response => response.json())
+        .then(student => {
+            if (student) {
+                document.getElementById('student-name').textContent = `${student.firstname} ${student.lastname}`;
+                document.getElementById('email').textContent = student.email;
+                document.getElementById('profilePicDisplay').src = `/pfp/${student.idno}.png`;
+            } else {
+                console.error('No student data returned');
+            }
+        })
+        .catch(error => console.error('Error fetching student data:', error));
+    } else {
+        console.error('Username not found in localStorage');
+        alert('Failed to fetch student data. Please try again.');
+    }
+    document.addEventListener('DOMContentLoaded', function () {
+    const modal = document.getElementById('searchModal');
+    modal.style.display = 'none'; // Ensure the modal is hidden on page load
+});
+    // Modal functionality
+    const modal = document.getElementById('searchModal');
+const searchInput = document.getElementById('search-input');
+const searchButton = document.getElementById('search-button');
+const span = document.getElementsByClassName('close')[0];
+
+// Ensure the modal is hidden when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+    modal.style.display = 'none';
+});
+// Function to open the "Student Not Found" modal
+function openNotFoundModal() {
+    const notFoundModal = document.getElementById('notFoundModal');
+    notFoundModal.style.display = 'flex';
+}
+
+// Function to close the "Student Not Found" modal
+function closeNotFoundModal() {
+    const notFoundModal = document.getElementById('notFoundModal');
+    notFoundModal.style.display = 'none';
+}
+
+searchButton.onclick = function () {
+    const idno = searchInput.value;
+    if (idno) {
+        fetch(`/api/student/${idno}`)
+            .then(response => response.json())
+            .then(student => {
+                if (student) {
+                    document.getElementById('modal-student-name').textContent = `${student.firstname} ${student.lastname}`;
+                    document.getElementById('modal-student-session').textContent = student.session_value;
+                    modal.style.display = 'flex'; // Show the modal (use 'flex' for centering)
+                } else {
+                    openNotFoundModal(); // Show the custom popup modal if the student is not found
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching student data:', error);
+                alert('An error occurred while fetching student data.');
+            });
+    } else {
+        alert('Please enter a student ID');
+    }
+};
+
+span.onclick = function() {
+    modal.style.display = 'none';
+}
+
+window.onclick = function(event) {
+    if (event.target == modal) {
+        modal.style.display = 'none';
+    }
+}
+    // Settle student functionality
+    document.getElementById('settle-button').addEventListener('click', () => {
+    const idno = searchInput.value;
+    const purpose = document.getElementById('purpose').value;
+    const labroom = document.getElementById('labroom').value;
+
+    if (idno && purpose && labroom) {
+        fetch('/api/settle', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ idno, purpose, labroom })
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message); // Dynamically show the response message
+            if (data.success) {
+                window.location.reload(); // Reload page only on successful settle
+            }
+        })
+        .catch(error => {
+            console.error('Error settling student:', error);
+            alert('An error occurred while processing the request.');
+        });
+    } else {
+        alert('Please enter all fields');
+    }
+});
+});
+
+        window.onload = function() {
+            highlightActiveLink();
+            fetchStatistics();
+            fetchAnnouncements();
+        };
+
+        document.getElementById('announcement-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            postAnnouncement();
+        });
+
+        function postAnnouncement() {
+            const author = document.getElementById('author').value;
+            const content = document.getElementById('content').value;
+
+            fetch('/api/announcement', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ author, content })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message === 'Announcement created successfully') {
+                    const announcement = {
+                        author,
+                        date_created: new Date().toISOString(),
+                        content
+                    };
+                    addAnnouncementToList(announcement);
+                } else {
+                    alert('Failed to post announcement');
+                }
+            })
+            .catch(error => console.error('Error posting announcement:', error));
+        }
+
+        function addAnnouncementToList(announcement) {
+        const announcementsDiv = document.getElementById('announcements');
+        const announcementDiv = document.createElement('div');
+        announcementDiv.classList.add('announcement-item');
+
+        const announcementHeader = document.createElement('div');
+        announcementHeader.classList.add('announcement-header');
+        announcementHeader.textContent = announcement.author;
+
+        const announcementDate = document.createElement('div');
+        announcementDate.classList.add('announcement-date');
+        announcementDate.textContent = new Date(announcement.date_created).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+
+        const announcementContent = document.createElement('div');
+        announcementContent.classList.add('announcement-content');
+        announcementContent.textContent = announcement.content;
+
+        announcementDiv.appendChild(announcementHeader);
+        announcementDiv.appendChild(announcementDate);
+        announcementDiv.appendChild(announcementContent);
+
+        announcementsDiv.prepend(announcementDiv); // Add the new announcement at the top
+    }
+        function fetchAnnouncements() {
+            fetch('/api/announcements')
+                .then(response => response.json())
+                .then(data => {
+                    const announcementsDiv = document.getElementById('announcements');
+                    announcementsDiv.innerHTML = ''; // Clear previous announcements
+                    data.forEach(announcement => {
+                        addAnnouncementToList(announcement);
+                    });
+                })
+                .catch(error => console.error('Error fetching announcements:', error));
+        }
+
+        function fetchStatistics() {
+            fetch('/api/statistics')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Statistics data:', data); // Debugging
+                    document.getElementById('totalSitInCount').innerText = data.totalSitIns;
+                    document.getElementById('currentSitInCount').innerText = data.sitInCount;
+                    document.getElementById('totalRegisteredStudentsCount').innerText = data.studentCount;
+                })
+                .catch(error => console.error('Error fetching statistics:', error));
+        }
+
+        // Call the fetchStatistics function to update the stats
+        fetchStatistics();
+
+        document.addEventListener('DOMContentLoaded', () => {
+                const username = localStorage.getItem('username');  
+                if (username) {
+                    fetch('/api/student', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ username })
+                    })
+                    .then(response => response.json())
+                    .then(student => {
+                        if (student) {
+                            document.getElementById('student-name2').textContent = `${student.firstname} ${student.lastname}`;
+                            document.getElementById('email').textContent = student.email;
+                            document.getElementById('profilePicDisplay').src = `/pfp/${student.idno}.png`;
+                        } else {
+                            console.error('No student data returned');
+                        }
+                    })
+                    .catch(error => console.error('Error fetching student data:', error));
+                } else {
+                    console.error('Username not found in localStorage');
+                    alert('Failed to fetch student data. Please try again.');
+                }
+            });
+
+
+
+
+
+        function logout() {
+            const username = localStorage.getItem('username');
+            if (username) {
+                fetch('/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message === 'Logged out successfully') {
+                        localStorage.removeItem('email');
+                        window.location.href = '/';
+                    } else {
+                        alert('Logout failed');
+                    }
+                })
+                .catch(error => console.error('Error during logout:', error));
+            } else {
+                console.error('Username not found in localStorage');
+            }
+        }
+
+        function highlightActiveLink() {
+            const currentPath = window.location.pathname;
+            const links = document.querySelectorAll('.sidebar a');
+            links.forEach(link => {
+                if (link.getAttribute('href') === currentPath) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+        }
+
+        function toggleDropdown(event) {
+            event.preventDefault(); // Prevent the default link behavior
+            var dropdown = event.target.nextElementSibling; // Get the next sibling element (the dropdown)
+            if (dropdown.style.display === "block") {
+                dropdown.style.display = "none";
+            } else {
+                dropdown.style.display = "block";
+            }
+        }
+    </script>
+</body>
+</html>

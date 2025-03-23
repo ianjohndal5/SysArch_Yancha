@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HOME</title>
+    <link rel="stylesheet" href="/css/astudent.css">
+</head>
+<div class="container">
+    <section>
+        <button class="burger-menu" onclick="toggleSidebar()">☰</button>
+        <div class="sidebar">
+            <figure class="center-figure">
+                <div class="logos">
+                    <img src="logos/ccslogo.png" alt="Logo" style="width:100%; max-width: 100px;">
+                </div>
+            </figure>
+            <a href="/admin/home" class="active">Dashboard</a>
+            <a href="/admin/editprofile">Account</a>
+            <a href="/admin/students">Students</a>
+            <a href="/admin/viewsitin">Sit-in</a>
+            <a href="/admin/viewrecords">Records</a>
+            <a href="/admin/viewreports">Reports</a>
+            <a href="/admin/viewfeedbacks">Feedbacks</a>
+            <a href="/admin/viewstatistics">Announcement</a>
+            <div class="sidebottom">
+                <div class="logout-section" onclick="logout()">
+                    <span class="logout-icon">&#128075;</span>
+                    <span class="logout-label">Logout</span>
+                </div>
+            </div>
+        </div>
+    </section>
+    <main class="main-content">
+        <div id="students-list">
+            <h3>Students</h3>
+            <button id="reset-sessions-button">Reset All Sessions</button>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID No</th>
+                        <th>Last Name</th>
+                        <th>First Name</th>
+                        <th>Middle Name</th>
+                        <th>Course</th>
+                        <th>Level</th>
+                        <th>Email</th>
+                        <th>Username</th>
+                        <th>Session Value</th>
+                        <th>Address</th>
+                    </tr>
+                </thead>
+                <tbody id="students-table-body">
+                    <!-- Student rows will be dynamically populated here -->
+                </tbody>
+            </table>
+        </div>
+    </main>
+    <script>
+        let sidebarVisible = false;
+
+function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    sidebarVisible = !sidebarVisible; // Toggle visibility state
+    if (sidebarVisible) {
+        sidebar.classList.add('show'); // Show sidebar
+    } else {
+        sidebar.classList.remove('show'); // Hide sidebar
+    }
+}
+
+window.onclick = function (event) {
+    const sidebar = document.querySelector('.sidebar');
+    const burgerMenu = document.querySelector('.burger-menu');
+    if (sidebarVisible && !sidebar.contains(event.target) && event.target !== burgerMenu) {
+        sidebar.classList.remove('show'); // Hide sidebar when clicking outside
+        sidebarVisible = false;
+    }
+};
+
+
+window.onclick = function (event) {
+    const sidebar = document.querySelector('.sidebar');
+    const burgerMenu = document.querySelector('.burger-menu');
+    if (sidebarVisible && !sidebar.contains(event.target) && event.target !== burgerMenu) {
+        sidebar.classList.remove('show'); // Hide sidebar when clicking outside
+        sidebarVisible = false;
+    }
+};
+        document.getElementById('reset-sessions-button').addEventListener('click', () => {
+    if (confirm('Are you sure you want to reset all students\' sessions to 30?')) {
+        fetch('/api/reset-sessions', {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message || 'Sessions reset successfully!');
+            window.location.reload(); // Reload the page to reflect the changes
+        })
+        .catch(error => console.error('Error resetting sessions:', error));
+    }
+});
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const username = localStorage.getItem('username');  
+            if (username) {
+                fetch('/api/student', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username })
+                })
+                .then(response => response.json())
+                .then(student => {
+                    console.log('Fetched student data:', student);
+                    if (student) {
+                        console.log('Updating the DOM with student data');
+                        document.getElementById('student-name2').textContent = `${student.firstname} ${student.lastname}`;
+                        document.getElementById('student-name').textContent = `${student.firstname} ${student.lastname}`;
+                        document.getElementById('student-course').textContent = student.course;
+                        document.getElementById('student-year').textContent = student.level;
+                        document.getElementById('student-email').textContent = student.email;
+                        document.getElementById('student-address').textContent = student.address || 'N/A';
+                        document.getElementById('student-session').textContent = student.session_value;
+                        document.getElementById('student-picture-img').src = `public/pfp/${student.username}.jpg`; // Update picture src
+                    } else {
+                        console.error('No student data returned');
+                    }
+                })
+                .catch(error => console.error('Error fetching student data:', error));
+            } else {
+                console.error('Username not found in localStorage');
+                alert('Failed to fetch student data. Please try again.');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('/api/students')
+                .then(response => response.json())
+                .then(students => {
+                    const tableBody = document.getElementById('students-table-body');
+                    students.forEach(student => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${student.idno}</td>
+                            <td>${student.lastname}</td>
+                            <td>${student.firstname}</td>
+                            <td>${student.middlename}</td>
+                            <td>${student.course}</td>
+                            <td>${student.level}</td>
+                            <td>${student.email}</td>
+                            <td>${student.username}</td>
+                            <td>${student.session_value}</td>
+                            <td>${student.address}</td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                })
+                .catch(error => console.error('Error fetching students:', error));
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const username = localStorage.getItem('username');  
+            if (username) {
+                fetch('/api/student', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username })
+                })
+                .then(response => response.json())
+                .then(student => {
+                    console.log('Fetched student data:', student);
+                    if (student) {
+                        console.log('Updating the DOM with student data');
+                        document.getElementById('student-name2').textContent = `${student.firstname} ${student.lastname}`;
+                        document.getElementById('student-name').textContent = `${student.firstname} ${student.lastname}`;
+                        document.getElementById('student-course').textContent = student.course;
+                        document.getElementById('student-year').textContent = student.level;
+                        document.getElementById('student-email').textContent = student.email;
+                        document.getElementById('student-address').textContent = student.address || 'N/A';
+                        document.getElementById('student-session').textContent = student.session_value;
+                        document.getElementById('student-picture-img').src = `public/pfp/${student.username}.jpg`; // Update picture src
+                    } else {
+                        console.error('No student data returned');
+                    }
+                })
+                .catch(error => console.error('Error fetching student data:', error));
+            } else {
+                console.error('Username not found in localStorage');
+                alert('Failed to fetch student data. Please try again.');
+            }
+        });
+    
+        document.addEventListener('DOMContentLoaded', () => {
+                const username = localStorage.getItem('username');  
+                if (username) {
+                    fetch('/api/student', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ username })
+                    })
+                    .then(response => response.json())
+                    .then(student => {
+                        if (student) {
+                            document.getElementById('student-name2').textContent = `${student.firstname} ${student.lastname}`;
+                            document.getElementById('email').textContent = student.email;
+                            document.getElementById('profilePicDisplay').src = `/pfp/${student.idno}.png`;
+                        } else {
+                            console.error('No student data returned');
+                        }
+                    })
+                    .catch(error => console.error('Error fetching student data:', error));
+                } else {
+                    console.error('Username not found in localStorage');
+                    alert('Failed to fetch student data. Please try again.');
+                }
+            });
+
+
+            
+        function logout() {
+            const username = localStorage.getItem('username');
+            if (username) {
+                fetch('/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message === 'Logged out successfully') {
+                        localStorage.removeItem('email');
+                        window.location.href = '/';
+                    } else {
+                        alert('Logout failed');
+                    }
+                })
+                .catch(error => console.error('Error during logout:', error));
+            } else {
+                console.error('Username not found in localStorage');
+            }
+        }
+        function highlightActiveLink() {
+            const currentPath = window.location.pathname;
+            const links = document.querySelectorAll('.sidebar a');
+            links.forEach(link => {
+                if (link.getAttribute('href') === currentPath) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+        }
+        window.onload = highlightActiveLink;
+
+        function toggleDropdown(event) {
+            event.preventDefault(); // Prevent the default link behavior
+            var dropdown = event.target.nextElementSibling; // Get the next sibling element (the dropdown)
+            if (dropdown.style.display === "block") {
+                dropdown.style.display = "none";
+            } else {
+                dropdown.style.display = "block";
+            }
+        }
+
+        function logout() {
+            const username = localStorage.getItem('username');
+            if (username) {
+                fetch('/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message === 'Logged out successfully') {
+                        localStorage.removeItem('email');
+                        window.location.href = '/';
+                    } else {
+                        alert('Logout failed');
+                    }
+                })
+                .catch(error => console.error('Error during logout:', error));
+            } else {
+                console.error('Username not found in localStorage');
+            }
+        }
+
+        function highlightActiveLink() {
+            const currentPath = window.location.pathname;
+            const links = document.querySelectorAll('.sidebar a');
+            links.forEach(link => {
+                if (link.getAttribute('href') === currentPath) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+        }
+
+        window.onload = highlightActiveLink;
+
+        function toggleDropdown(event) {
+            event.preventDefault(); // Prevent the default link behavior
+            var dropdown = event.target.nextElementSibling; // Get the next sibling element (the dropdown)
+            if (dropdown.style.display === "block") {
+                dropdown.style.display = "none";
+            } else {
+                dropdown.style.display = "block";
+            }
+        }
+    </script>
+</div>
+</html>

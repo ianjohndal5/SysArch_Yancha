@@ -1,0 +1,197 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    display: flex;
+    background: linear-gradient(135deg, #6a11cb, #2575fc);
+}
+
+.sidebar {
+    width: 250px;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 0;
+    backdrop-filter: blur(10px);
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar img {
+    width: 100px;
+    margin-bottom: 20px;
+}
+
+.sidebar a {
+    color: white;
+    text-decoration: none;
+    padding: 10px 20px;
+    width: 100%;
+    text-align: center;
+    transition: background 0.3s ease;
+    box-sizing: border-box;
+}
+
+.sidebar a:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.sidebottom {
+    text-align: center;
+    padding: 20px;
+    font-size: 18px;
+    margin-top: auto;
+}
+
+/* Updated Logout Section Styles */
+.logout-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    padding: 10px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.logout-section:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.logout-icon {
+    font-size: 24px;
+}
+
+.logout-label {
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.main-content {
+    display: flex;
+    flex-direction: row;
+    padding: 20px;
+    width: 100%;
+    gap: 20px;
+    background-color: rgba(255, 255, 255, 0.9);
+    margin: 20px;
+    border-radius: 20px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+
+
+.announcement, .ruleandreg {
+    background-color: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.announcement, .ruleandreg {
+    width: 100%;
+}
+
+.announcement h3, .ruleandreg h3 {
+    margin-top: 0;
+    color: #2c3e50;
+}
+
+/* Announcement Section Styles */
+.announcement {
+    flex-grow: 1;
+    overflow-y: auto; /* Enables vertical scrolling */
+    max-height: 100%; /* Adjusts height to prevent overlap */
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.announcement h3 {
+    font-size: 1.5em;
+    color: #2c3e50;
+    border-bottom: 2px solid #6a11cb;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+#announcements {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.announcement-item {
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    padding: 15px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.announcement-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.announcement-header {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #6a11cb;
+    margin-bottom: 5px;
+}
+
+.announcement-date {
+    font-size: 0.9em;
+    color: #777;
+    margin-bottom: 10px;
+}
+
+.announcement-content {
+    font-size: 0.95em;
+    color: #333;
+    line-height: 1.5;
+}
+
+.ruleandreg .content {
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+.ruleandreg .content p {
+    line-height: 1.6;
+    color: #555;
+}
+
+@media (max-width: 768px) {
+    body {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        height: auto;
+        flex-direction: row;
+        justify-content: space-between;
+        padding: 10px;
+    }
+
+    .sidebar img {
+        margin-bottom: 0;
+    }
+
+    .sidebar a {
+        padding: 10px;
+    }
+
+    .sidebottom {
+        margin-top: 0;
+        padding: 10px;
+    }
+}
