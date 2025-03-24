@@ -71,7 +71,9 @@ body {
     font-size: 18px;
     margin-top: auto;
 }
-
+main {
+    padding: 20px;
+}
 /* Updated Logout Section Styles */
 .logout-section {
     display: flex;
