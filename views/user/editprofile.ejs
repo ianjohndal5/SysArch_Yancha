@@ -85,181 +85,237 @@
         </div>
     </main>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-                const username = localStorage.getItem('username');
-                if (username) {
-                    fetch('/api/student', {
-                        method: 'POST',
+    
+        let sidebarVisible = false;
+    
+            function toggleSidebar() {
+                const sidebar = document.querySelector('.sidebar');
+                sidebarVisible = !sidebarVisible; // Toggle visibility state
+                if (sidebarVisible) {
+                    sidebar.classList.add('show'); // Show sidebar
+                } else {
+                    sidebar.classList.remove('show'); // Hide sidebar
+                }
+            }
+    
+            window.onclick = function (event) {
+                const sidebar = document.querySelector('.sidebar');
+                const burgerMenu = document.querySelector('.burger-menu');
+                if (sidebarVisible && !sidebar.contains(event.target) && event.target !== burgerMenu) {
+                    sidebar.classList.remove('show'); // Hide sidebar when clicking outside
+                    sidebarVisible = false;
+                }
+            };
+            
+            document.addEventListener('DOMContentLoaded', () => {
+                    const username = localStorage.getItem('username');
+                    if (username) {
+                        fetch('/api/student', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ username })
+                        })
+                        .then(response => response.json())
+                        .then(student => {
+                            if (student) {
+                                document.getElementById('idno').value = student.idno;
+                                document.getElementById('profilePicDisplay').src = `/pfp/${student.idno}.png`;
+                                document.getElementById('lastname').value = student.lastname;
+                                document.getElementById('firstname').value = student.firstname;
+                                document.getElementById('middlename').value = student.middlename;
+                                document.getElementById('course').value = student.course;
+                                document.getElementById('level').value = student.level;
+                                document.getElementById('email').value = student.email;
+                                document.getElementById('address').value = student.address;
+                                document.getElementById('username').value = student.username;
+                            } else {
+                                console.error('No student data returned');
+                            }
+                        })
+                        .catch(error => console.error('Error fetching student data:', error));
+                    } else {
+                        console.error('Username not found in localStorage');
+                        alert('Failed to fetch student data. Please try again.');
+                    }
+                });
+        
+                document.getElementById('updatebutton').addEventListener('click', function (event) {
+                    event.preventDefault();
+        
+                    const updatedData = {
+                        idno: document.getElementById('idno').value,
+                        lastname: document.getElementById('lastname').value,
+                        firstname: document.getElementById('firstname').value,
+                        middlename: document.getElementById('middlename').value,
+                        course: document.getElementById('course').value,
+                        level: document.getElementById('level').value,
+                        email: document.getElementById('email').value,
+                        address: document.getElementById('address').value,
+                        username: document.getElementById('username').value,
+                        password: document.getElementById('password').value
+                    };
+        
+                    fetch('/api/updateProfile', {
+                        method: 'PUT',
                         headers: {
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({ username })
-                    })
-                    .then(response => response.json())
-                    .then(student => {
-                        if (student) {
-                            document.getElementById('idno').value = student.idno;
-                            document.getElementById('profilePicDisplay').src = `/pfp/${student.idno}.png`;
-                            document.getElementById('lastname').value = student.lastname;
-                            document.getElementById('firstname').value = student.firstname;
-                            document.getElementById('middlename').value = student.middlename;
-                            document.getElementById('course').value = student.course;
-                            document.getElementById('level').value = student.level;
-                            document.getElementById('email').value = student.email;
-                            document.getElementById('address').value = student.address;
-                            document.getElementById('username').value = student.username;
-                        } else {
-                            console.error('No student data returned');
-                        }
-                    })
-                    .catch(error => console.error('Error fetching student data:', error));
-                } else {
-                    console.error('Username not found in localStorage');
-                    alert('Failed to fetch student data. Please try again.');
-                }
-            });
-    
-            document.getElementById('updatebutton').addEventListener('click', function (event) {
-                event.preventDefault();
-    
-                const updatedData = {
-                    idno: document.getElementById('idno').value,
-                    lastname: document.getElementById('lastname').value,
-                    firstname: document.getElementById('firstname').value,
-                    middlename: document.getElementById('middlename').value,
-                    course: document.getElementById('course').value,
-                    level: document.getElementById('level').value,
-                    email: document.getElementById('email').value,
-                    address: document.getElementById('address').value,
-                    username: document.getElementById('username').value,
-                    password: document.getElementById('password').value
-                };
-    
-                fetch('/api/updateProfile', {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(updatedData)
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('Profile updated successfully!');
-                        window.location.href = '/user/home';
-                    } else {
-                        alert(`Update failed: ${data.message}`);
-                    }
-                })
-                .catch(error => console.error('Error updating profile:', error));
-            });
-    
-            function highlightActiveLink() {
-                const currentPath = window.location.pathname;
-                const links = document.querySelectorAll('.sidebar a');
-                links.forEach(link => {
-                    if (link.getAttribute('href') === currentPath) {
-                        link.classList.add('active');
-                    } else {
-                        link.classList.remove('active');
-                    }
-                });
-            }
-            window.onload = highlightActiveLink;
-            
-            function toggleDropdown(event) {
-                event.preventDefault(); 
-                var dropdown = event.target.nextElementSibling; 
-                if (dropdown.style.display === "block") {
-                    dropdown.style.display = "none";
-                } else {
-                    dropdown.style.display = "block";
-                }
-            }
-            function setPlaceholder(id, text) {
-                var element = document.getElementById(id);
-                if (element) {
-                    if (element.tagName === 'INPUT') {
-                        element.placeholder = text;
-                    } else if (element.tagName === 'SELECT') {
-                        var placeholderOption = document.createElement('option');
-                        placeholderOption.value = "";
-                        placeholderOption.textContent = text;
-                        placeholderOption.disabled = true;
-                        placeholderOption.selected = true;
-                        element.insertBefore(placeholderOption, element.firstChild);
-                    } else {
-                        console.error('Unsupported element type');
-                    }
-                } else {
-                    console.error('No element found with id: ' + id);
-                }
-            }
-    
-         
-        // Handle profile picture update
-        const profilePictureContainer = document.querySelector('.profile-picture');
-        profilePictureContainer.addEventListener('click', () => {
-            const fileInput = document.createElement('input');
-            fileInput.type = 'file';
-            fileInput.accept = 'image/*';
-            fileInput.onchange = (event) => {
-                const file = event.target.files[0];
-                if (file) {
-                    const formData = new FormData();
-                    formData.append('username', username);
-                    formData.append('profilePic', file);
-    
-                    fetch('/api/updateProfilePicture', {
-                        method: 'POST',
-                        body: formData
+                        body: JSON.stringify(updatedData)
                     })
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            // Update profile picture on the page
-                            const reader = new FileReader();
-                            reader.onload = (e) => {
-                                document.getElementById('profilePicDisplay').src = e.target.result;
-                            };
-                            reader.readAsDataURL(file);
-                            alert('Profile picture updated successfully!');
+                            alert('Profile updated successfully!');
+                            window.location.href = '/admin/home';
                         } else {
                             alert(`Update failed: ${data.message}`);
                         }
                     })
-                    .catch(error => console.error('Error updating profile picture:', error));
-                }
-            };
-            fileInput.click();
-        });
-
-    function logout() {
-                const username = localStorage.getItem('username');
-                if (username) {
-                    fetch('/logout', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ username })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.message === 'Logged out successfully') {
-                            localStorage.removeItem('email');
-                            window.location.href = '/';
+                    .catch(error => console.error('Error updating profile:', error));
+                });
+        
+                function highlightActiveLink() {
+                    const currentPath = window.location.pathname;
+                    const links = document.querySelectorAll('.sidebar a');
+                    links.forEach(link => {
+                        if (link.getAttribute('href') === currentPath) {
+                            link.classList.add('active');
                         } else {
-                            alert('Logout failed');
+                            link.classList.remove('active');
                         }
-                    })
-                    .catch(error => console.error('Error during logout:', error));
-                } else {
-                    console.error('Username not found in localStorage');
+                    });
                 }
+                window.onload = highlightActiveLink;
+                
+                function toggleDropdown(event) {
+                    event.preventDefault(); 
+                    var dropdown = event.target.nextElementSibling; 
+                    if (dropdown.style.display === "block") {
+                        dropdown.style.display = "none";
+                    } else {
+                        dropdown.style.display = "block";
+                    }
+                }
+                function setPlaceholder(id, text) {
+                    var element = document.getElementById(id);
+                    if (element) {
+                        if (element.tagName === 'INPUT') {
+                            element.placeholder = text;
+                        } else if (element.tagName === 'SELECT') {
+                            var placeholderOption = document.createElement('option');
+                            placeholderOption.value = "";
+                            placeholderOption.textContent = text;
+                            placeholderOption.disabled = true;
+                            placeholderOption.selected = true;
+                            element.insertBefore(placeholderOption, element.firstChild);
+                        } else {
+                            console.error('Unsupported element type');
+                        }
+                    } else {
+                        console.error('No element found with id: ' + id);
+                    }
+                }
+        
+                let username; // Declare username in a broader scope
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        username = localStorage.getItem('username'); // Assign the value to the broader-scoped variable
+        if (username) {
+            fetch('/api/student', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username })
+            })
+            .then(response => response.json())
+            .then(student => {
+                if (student) {
+                    document.getElementById('idno').value = student.idno;
+                    document.getElementById('profilePicDisplay').src = `/pfp/${student.idno}.png`;
+                    document.getElementById('lastname').value = student.lastname;
+                    document.getElementById('firstname').value = student.firstname;
+                    document.getElementById('middlename').value = student.middlename;
+                    document.getElementById('course').value = student.course;
+                    document.getElementById('level').value = student.level;
+                    document.getElementById('email').value = student.email;
+                    document.getElementById('address').value = student.address;
+                    document.getElementById('username').value = student.username;
+                } else {
+                    console.error('No student data returned');
+                }
+            })
+            .catch(error => console.error('Error fetching student data:', error));
+        } else {
+            console.error('Username not found in localStorage');
+            alert('Failed to fetch student data. Please try again.');
+        }
+    });
+    
+    // Handle profile picture update
+    const profilePictureContainer = document.querySelector('.profile-picture');
+    profilePictureContainer.addEventListener('click', () => {
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'image/*';
+        fileInput.onchange = (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const formData = new FormData();
+                formData.append('username', username); // Use the broader-scoped username variable
+                formData.append('profilePic', file);
+    
+                fetch('/api/updateProfilePicture', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update profile picture on the page
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            document.getElementById('profilePicDisplay').src = e.target.result;
+                        };
+                        reader.readAsDataURL(file);
+                        alert('Profile picture updated successfully!');
+                    } else {
+                        alert(`Update failed: ${data.message}`);
+                    }
+                })
+                .catch(error => console.error('Error updating profile picture:', error));
             }
-           
-            
-    </script>
+        };
+        fileInput.click();
+    });
+        function logout() {
+                    const username = localStorage.getItem('username');
+                    if (username) {
+                        fetch('/logout', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ username })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.message === 'Logged out successfully') {
+                                localStorage.removeItem('email');
+                                window.location.href = '/';
+                            } else {
+                                alert('Logout failed');
+                            }
+                        })
+                        .catch(error => console.error('Error during logout:', error));
+                    } else {
+                        console.error('Username not found in localStorage');
+                    }
+                }
+               
+                
+        </script>
 </body>
 </html>
